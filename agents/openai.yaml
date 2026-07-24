@@ -1,0 +1,4 @@
+interface:
+  display_name: "Itasca 3DEC Skill"
+  short_description: "Develop and validate reusable 3DEC 9.x workflows"
+  default_prompt: "Use $itasca-3dec-skill to inspect, modify, run, and validate this 3DEC project."
