@@ -4,7 +4,7 @@ description: Develop, troubleshoot, automate, and validate Itasca 3DEC 9.x proje
 license: MIT
 metadata:
   author: hotheartguy
-  version: "1.0.0"
+  version: "1.0.1"
   compatibility: Requires Windows PowerShell and local access to Itasca 3DEC 9.x. Subscription builds require an active licensed 3DEC GUI session before console execution.
 ---
 
@@ -35,6 +35,7 @@ Use the installed 3DEC console and version-matched local documentation to make s
 5. Run the narrowest useful stage.
    - Restore the nearest valid upstream `.sav` rather than rerunning the entire model when the change permits it.
    - Use `scripts/run-3dec.ps1` with an explicit timeout.
+   - If the console reports `No licenses found`, stop the run immediately. Tell the user to open 3DEC, use Execute once, confirm that the license is active, keep the GUI open, and then retry.
    - Inspect the generated log even when the process exits with code zero.
 6. Validate the model.
    - Read `references/validation.md` when changing geometry, zoning, properties, boundary conditions, solving, or coupling.
@@ -65,6 +66,8 @@ $env:ITASCA_3DEC_CONSOLE = 'C:\Program Files\Itasca\Itasca Software Subscription
 ```
 
 The runner passes a temporary `program exit` data file after the requested files. If a 3DEC command error aborts the input stack and leaves the console at `3dec>`, the runner terminates it at the timeout and returns a failure.
+
+The runner monitors output while 3DEC is running. When it sees `No licenses found`, it terminates the console without waiting for the normal timeout and returns `status: license-unavailable` with the required GUI action.
 
 Read `references/cli-python.md` for CLI discovery, local documentation paths, and embedded-Python selection.
 

@@ -17,7 +17,7 @@ An open-format Agent Skill for developing, troubleshooting, running, and validat
 - Windows with PowerShell.
 - A locally installed and licensed Itasca 3DEC 9.x.
 - Local access to `3dec9_console.exe` and the installed documentation.
-- For Itasca Software Subscription builds, an active licensed 3DEC GUI session before console execution.
+- For Itasca Software Subscription builds, an active licensed 3DEC GUI session. Open 3DEC and use Execute once before console execution.
 
 This repository does not contain Itasca executables, documentation, licenses, or proprietary model data.
 
@@ -61,9 +61,12 @@ Use itasca-3dec-skill to inspect this project and run step1_geometry.dat.
 For an Itasca Software Subscription installation:
 
 1. Start 3DEC normally and wait for the GUI and license session to become active.
-2. Keep the GUI open.
-3. Ask the agent to run the desired `.dat` stage.
-4. Review the generated log and numerical acceptance criteria, not only the process exit code.
+2. Use Execute once inside 3DEC and confirm that the license is active.
+3. Keep the GUI open.
+4. Ask the agent to run the desired `.dat` stage.
+5. Review the generated log and numerical acceptance criteria, not only the process exit code.
+
+If the console reports `No licenses found`, the runner stops immediately instead of waiting for the normal timeout. Complete the GUI Execute step and retry.
 
 Run a data file manually:
 
@@ -123,7 +126,9 @@ MIT. See [LICENSE](LICENSE).
 - Windows 與 PowerShell。
 - 已安裝並具有有效授權的 Itasca 3DEC 9.x。
 - AI 代理必須能存取本機 `3dec9_console.exe`、專案檔案及說明文件。
-- 訂閱版必須先啟動 3DEC GUI、完成登入或授權，再執行 CLI。
+- 訂閱版必須先啟動 3DEC GUI，並在 3DEC 中按 Execute 執行一次、確認取得授權後，再執行 CLI。
+
+若 console 顯示 `No licenses found`，runner 會立即停止，不會持續等待一般 timeout。請先回到 3DEC GUI 執行一次，確認授權成功並保持 GUI 開啟，再重試 CLI。
 
 ### 建議工作流程
 

@@ -125,7 +125,9 @@ if (Test-Path -LiteralPath $errorLogFile -PathType Leaf) {
 $startedAt = Get-Date
 $process = $null
 $timedOut = $false
+$licenseUnavailable = $false
 $processExitCode = $null
+$licenseGuidance = 'No licenses found. Open the 3DEC GUI, use Execute once and confirm that the license is active, keep the GUI open, then retry the CLI run.'
 
 try {
     [IO.File]::WriteAllText($exitDataFile, "program exit`r`n", [Text.Encoding]::ASCII)
@@ -150,24 +152,133 @@ try {
         throw "Unable to start 3DEC process: $resolvedExecutable"
     }
 
-    $standardOutputTask = $process.StandardOutput.ReadToEndAsync()
-    $standardErrorTask = $process.StandardError.ReadToEndAsync()
+    $standardOutputBuilder = [Text.StringBuilder]::new()
+    $standardErrorBuilder = [Text.StringBuilder]::new()
+    $standardOutputBuffer = New-Object char[] 4096
+    $standardErrorBuffer = New-Object char[] 4096
+    $standardOutputTask = $process.StandardOutput.ReadAsync(
+        $standardOutputBuffer,
+        0,
+        $standardOutputBuffer.Length
+    )
+    $standardErrorTask = $process.StandardError.ReadAsync(
+        $standardErrorBuffer,
+        0,
+        $standardErrorBuffer.Length
+    )
+    $standardOutputComplete = $false
+    $standardErrorComplete = $false
+    $licenseProbe = ''
+    $deadline = $startedAt.AddSeconds($TimeoutSeconds)
+    $terminationRequested = $false
 
-    if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
-        $timedOut = $true
-        try {
-            $process.Kill()
+    while ($true) {
+        if (-not $standardOutputComplete -and $standardOutputTask.IsCompleted) {
+            $charactersRead = $standardOutputTask.GetAwaiter().GetResult()
+            if ($charactersRead -eq 0) {
+                $standardOutputComplete = $true
+            }
+            else {
+                $chunk = [string]::new(
+                    $standardOutputBuffer,
+                    0,
+                    $charactersRead
+                )
+                [void]$standardOutputBuilder.Append($chunk)
+                $licenseProbe += $chunk
+                if ($licenseProbe.Length -gt 512) {
+                    $licenseProbe = $licenseProbe.Substring(
+                        $licenseProbe.Length - 512
+                    )
+                }
+                if (
+                    $licenseProbe.IndexOf(
+                        'No licenses found',
+                        [StringComparison]::OrdinalIgnoreCase
+                    ) -ge 0
+                ) {
+                    $licenseUnavailable = $true
+                }
+                $standardOutputTask = $process.StandardOutput.ReadAsync(
+                    $standardOutputBuffer,
+                    0,
+                    $standardOutputBuffer.Length
+                )
+            }
         }
-        catch {
-            Write-Warning "Unable to terminate timed-out 3DEC process: $($_.Exception.Message)"
+
+        if (-not $standardErrorComplete -and $standardErrorTask.IsCompleted) {
+            $charactersRead = $standardErrorTask.GetAwaiter().GetResult()
+            if ($charactersRead -eq 0) {
+                $standardErrorComplete = $true
+            }
+            else {
+                $chunk = [string]::new(
+                    $standardErrorBuffer,
+                    0,
+                    $charactersRead
+                )
+                [void]$standardErrorBuilder.Append($chunk)
+                $licenseProbe += $chunk
+                if ($licenseProbe.Length -gt 512) {
+                    $licenseProbe = $licenseProbe.Substring(
+                        $licenseProbe.Length - 512
+                    )
+                }
+                if (
+                    $licenseProbe.IndexOf(
+                        'No licenses found',
+                        [StringComparison]::OrdinalIgnoreCase
+                    ) -ge 0
+                ) {
+                    $licenseUnavailable = $true
+                }
+                $standardErrorTask = $process.StandardError.ReadAsync(
+                    $standardErrorBuffer,
+                    0,
+                    $standardErrorBuffer.Length
+                )
+            }
         }
-        $process.WaitForExit()
+
+        if (-not $terminationRequested -and -not $process.HasExited) {
+            if ($licenseUnavailable) {
+                $terminationRequested = $true
+                try {
+                    $process.Kill()
+                }
+                catch {
+                    Write-Warning "Unable to terminate unlicensed 3DEC process: $($_.Exception.Message)"
+                }
+            }
+            elseif ((Get-Date) -ge $deadline) {
+                $timedOut = $true
+                $terminationRequested = $true
+                try {
+                    $process.Kill()
+                }
+                catch {
+                    Write-Warning "Unable to terminate timed-out 3DEC process: $($_.Exception.Message)"
+                }
+            }
+        }
+
+        if (
+            $process.HasExited -and
+            $standardOutputComplete -and
+            $standardErrorComplete
+        ) {
+            break
+        }
+
+        Start-Sleep -Milliseconds 25
     }
 
-    $standardOutput = $standardOutputTask.GetAwaiter().GetResult()
-    $standardError = $standardErrorTask.GetAwaiter().GetResult()
+    $process.WaitForExit()
+    $standardOutput = $standardOutputBuilder.ToString()
+    $standardError = $standardErrorBuilder.ToString()
 
-    if (-not $timedOut) {
+    if (-not $timedOut -and -not $licenseUnavailable) {
         $processExitCode = $process.ExitCode
     }
 
@@ -177,9 +288,13 @@ try {
     $logSections.Add("Data files: $($inputFiles -join '; ')")
     $logSections.Add("Started: $($startedAt.ToString('o'))")
     $logSections.Add("Timed out: $timedOut")
+    $logSections.Add("License unavailable: $licenseUnavailable")
     $logSections.Add("Process exit code: $processExitCode")
     $logSections.Add("`r`n===== STDOUT =====`r`n$standardOutput")
     $logSections.Add("`r`n===== STDERR =====`r`n$standardError")
+    if ($licenseUnavailable) {
+        $logSections.Add("`r`n===== ACTION REQUIRED =====`r`n$licenseGuidance")
+    }
 
     $newErrorLog = $false
     if (Test-Path -LiteralPath $errorLogFile -PathType Leaf) {
@@ -193,12 +308,16 @@ try {
     }
 
     $combinedOutput = "$standardOutput`r`n$standardError"
-    $errorPattern = '(?m)^\*\*\*|Bad conversion of parameter|While processing line|Traceback \(most recent call last\)|Unhandled exception'
+    $errorPattern = '(?m)^\*\*\*|Bad conversion of parameter|While processing line|Traceback \(most recent call last\)|Unhandled exception|No licenses found'
     $consoleError = [regex]::IsMatch($combinedOutput, $errorPattern)
 
     $statusCode = 0
     $status = 'success'
-    if ($timedOut) {
+    if ($licenseUnavailable) {
+        $statusCode = 3
+        $status = 'license-unavailable'
+    }
+    elseif ($timedOut) {
         $statusCode = 124
         $status = 'timeout'
     }
@@ -228,6 +347,13 @@ try {
         status = $status
         status_code = $statusCode
         timed_out = $timedOut
+        license_unavailable = $licenseUnavailable
+        action_required = if ($licenseUnavailable) {
+            $licenseGuidance
+        }
+        else {
+            $null
+        }
         process_exit_code = $processExitCode
         executable = $resolvedExecutable
         data_file = $mainDataFile

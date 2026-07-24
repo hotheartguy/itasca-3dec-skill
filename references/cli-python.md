@@ -23,6 +23,15 @@ The Itasca Software Subscription build may require an active licensed GUI sessio
 
 If the console produces no log and takes much longer than a known-good run, check for a hidden subscription sign-in or license prompt in the GUI. Before retrying, verify that an earlier `3dec9_console.exe` process is not still running. Do not start duplicate console runs against the same project directory.
 
+If the console prints `No licenses found`, do not wait for the general run timeout and do not retry in a loop. Stop the console and tell the user to:
+
+1. Open the 3DEC GUI.
+2. Use Execute once inside 3DEC.
+3. Confirm that the GUI obtained a license.
+4. Keep the GUI open and retry the CLI run.
+
+The bundled runner detects this message during execution, terminates promptly, and returns `status: license-unavailable` with status code `3`.
+
 ## Console execution
 
 Run a data file from its project root so relative imports resolve:
