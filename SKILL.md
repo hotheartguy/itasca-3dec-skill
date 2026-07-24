@@ -1,6 +1,11 @@
 ---
 name: itasca-3dec-skill
 description: Develop, troubleshoot, automate, and validate Itasca 3DEC 9.x projects on Windows. Use when working with 3DEC .dat, FISH, or embedded-Python files; geometry imports; staged .sav workflows; console batch execution; local command/manual lookup; mechanical, fluid, or coupled convergence checks; or reproducible repository workflows around 3dec9_console.exe.
+license: MIT
+metadata:
+  author: hotheartguy
+  version: "1.0.0"
+  compatibility: Requires Windows PowerShell and local access to Itasca 3DEC 9.x. Subscription builds require an active licensed 3DEC GUI session before console execution.
 ---
 
 # Itasca 3DEC Skill
