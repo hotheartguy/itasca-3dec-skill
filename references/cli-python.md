@@ -12,6 +12,17 @@ Use this order:
 
 Do not hardcode a user profile, license identifier, project path, or minor release number in a public workflow.
 
+## Subscription license startup
+
+The Itasca Software Subscription build may require an active licensed GUI session before command-line execution:
+
+1. Start 3DEC normally or launch `3dec9_gui.exe`.
+2. Wait until the GUI is fully open and any sign-in or license prompt has completed.
+3. Keep the GUI process running.
+4. Start `3dec9_console.exe` or `scripts/run-3dec.ps1`.
+
+If the console produces no log and takes much longer than a known-good run, check for a hidden subscription sign-in or license prompt in the GUI. Before retrying, verify that an earlier `3dec9_console.exe` process is not still running. Do not start duplicate console runs against the same project directory.
+
 ## Console execution
 
 Run a data file from its project root so relative imports resolve:

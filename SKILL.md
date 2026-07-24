@@ -16,6 +16,7 @@ Use the installed 3DEC console and version-matched local documentation to make s
 2. Discover the installed 3DEC version.
    - Prefer `ITASCA_3DEC_CONSOLE` when set.
    - Otherwise locate `3dec9_console.exe` with `scripts/run-3dec.ps1`.
+   - For an Itasca Software Subscription installation, launch the 3DEC GUI and confirm that its licensed session is active before starting `3dec9_console.exe`.
    - Prefer the local manual shipped with that installation over online documentation from another release.
 3. Verify syntax before editing.
    - Search local documentation with `scripts/search-3dec-docs.ps1`.
@@ -40,6 +41,8 @@ Use the installed 3DEC console and version-matched local documentation to make s
    - Do not commit generated `.sav`, `.temp`, `.backup`, dump, or routine log files unless explicitly requested.
 
 ## Run 3DEC
+
+For an Itasca Software Subscription installation, first start 3DEC from the desktop or run `3dec9_gui.exe`, then wait until the GUI has opened and the subscription license is available. Keep that GUI session open while starting the console. A headless console launched before the licensed GUI session may wait indefinitely or fail to produce a useful log.
 
 Invoke the bundled runner from PowerShell:
 
