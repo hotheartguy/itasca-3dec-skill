@@ -22,7 +22,7 @@ Use the installed 3DEC console and version-matched local documentation to make s
    - Prefer `ITASCA_3DEC_CONSOLE` when set.
    - Otherwise locate `3dec9_console.exe` with `scripts/run-3dec.ps1`.
    - For an Itasca Software Subscription installation, launch the 3DEC GUI and confirm that its licensed session is active before starting `3dec9_console.exe`.
-   - Prefer the local manual shipped with that installation over online documentation from another release.
+   - Prefer the local manual shipped with that installation. If online documentation is needed, use `https://docs.itascasoftware.com/` and select the 3DEC documentation family matching the installed major and minor version.
 3. Verify syntax before editing.
    - Search local documentation with `scripts/search-3dec-docs.ps1`.
    - Use the `?` command hierarchy when documentation is unclear, for example `?`, `model ?`, or `block contact ?`.

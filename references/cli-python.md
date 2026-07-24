@@ -65,7 +65,21 @@ Prefer documentation installed beside the executable:
 
 Set `ITASCA_DOC_ROOT` when the installation uses another layout. Search exact command names, FISH intrinsic names, error text, and theory headings before changing syntax.
 
-Online documentation is a fallback. Match its 3DEC release to the installed program before using examples.
+Use documentation in this order:
+
+1. Installed console prompt help for the exact command grammar.
+2. Version-matched local documentation shipped with the executable.
+3. Version-matched 3DEC documentation from the official archive.
+4. Documentation from another release only for background concepts, never as the sole authority for command syntax.
+
+Official documentation entry points:
+
+- Archive: `https://docs.itascasoftware.com/`
+- 3DEC 9.7: `https://docs.itascasoftware.com/itasca970/3dec/docproject/source/3dechome.html`
+- 3DEC 9.0: `https://docs.itascasoftware.com/itasca900/3dec/docproject/source/3dechome.html`
+- 3DEC 7.0: `https://docs.itascasoftware.com/flac3d700/3dec/docproject/source/3dechome.html`
+
+Match the documentation family to the installed major and minor version shown by the 3DEC startup banner or run log. For example, use the 9.7 documentation for 3DEC 9.7.49. Do not copy commands from a newer or older documentation family without verifying them against the installed console or local manual.
 
 ## Embedded Python
 
